@@ -10,3 +10,4 @@ commands:
         permission: helloworld
 permissions:
     helloworld:
+        description: "Permission for /helloworld"

@@ -29,7 +29,7 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
             $sender->sendMessage('Player not found!');
         }
 
-        if($this->isPlayerInArray($player) !== false){
+        if($this->isPlayerInArray($target) !== false){
             $this->removePlayer($target);
         }else{
             $this->addPlayer($target);
@@ -84,5 +84,9 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
                 $event->getPacket()->message = $this->message;
             }
         }
+    }
+
+    public function onQuit(\pocketmine\event\player\PlayerQuitEvent $event){
+        $this->removePlayer($event->getPlayer());
     }
 }
