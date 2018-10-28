@@ -66,12 +66,16 @@ class Main extends PluginBase implements Listener {
         return $this->players;
     }
 
-    public function isPlayerInArray(Player $player): ?int{
+    public function getIndexOfPlayer(Player $player){
         return array_search($player, $this->players);
     }
 
+    public function isPlayerInArray(Player $player): bool{
+        return $this->getIndexOfPlayer($player) !== false;
+    }
+
     public function addPlayer(Player $player): bool{
-        if($this->isPlayerInArray($player) === false){
+        if(!$this->isPlayerInArray($player)){
             $this->players[] = $player;
             return true;
         }
@@ -80,7 +84,7 @@ class Main extends PluginBase implements Listener {
     }
 
     public function removePlayer(Player $player): bool{
-        if(($index = $this->isPlayerInArray($player)) !== false){
+        if(($index = $this->getIndexOfPlayer($player)) !== false){
             unset($this->players[$index]);
             return true;
         }
@@ -90,7 +94,7 @@ class Main extends PluginBase implements Listener {
 
     public function onPacketSend(DataPacketSendEvent $event): void{
         if($event->getPacket()::NETWORK_ID === ProtocolInfo::TEXT_PACKET){
-            if($this->isGlobal() || $this->isPlayerInArray($event->getPlayer()) !== false){
+            if($this->isGlobal() || $this->isPlayerInArray($event->getPlayer())){
                 $event->getPacket()->message = $this->message;
             }
         }
