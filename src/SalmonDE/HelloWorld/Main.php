@@ -1,17 +1,25 @@
 <?php
+declare(strict_types = 1);
+
 namespace SalmonDE\HelloWorld;
 
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
+use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\event\server\DataPacketSendEvent;
+use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\Player;
+use pocketmine\plugin\PluginBase;
 
-class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Listener
-{
+class Main extends PluginBase implements Listener {
 
     private $message;
     private $global;
 
     private $players = [];
 
-    public function onEnable(){
+    public function onEnable(): void{
         $this->saveResource('config.yml');
 
         $this->message = (string) $this->getConfig()->get('message');
@@ -20,12 +28,12 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
     }
 
-    public function onCommand(\pocketmine\command\CommandSender $sender, \pocketmine\command\Command $cmd, $label, array $args){
-        if(!isset($args[0])){
+    public function onCommand(CommandSender $sender, Command $cmd, $label, array $params): bool{
+        if(!isset($params[0])){
             return false;
         }
 
-        if(!(($target = $this->getServer()->getPlayer($args[0])) instanceof Player)){
+        if(!(($target = $this->getServer()->getPlayer($params[0])) instanceof Player)){
             $sender->sendMessage('Player not found!');
         }
 
@@ -34,33 +42,35 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
         }else{
             $this->addPlayer($target);
         }
+
+        return true;
     }
 
-    public function getMessage() : string{
+    public function getMessage(): string{
         return $this->message;
     }
 
-    public function setMessage(string $message){
+    public function setMessage(string $message): void{
         $this->message = $message;
     }
 
-    public function isGlobal() : bool{
+    public function isGlobal(): bool{
         return $this->global;
     }
 
-    public function setGlobal($bool = true){
+    public function setGlobal($bool = true): void{
         $this->global = $bool;
     }
 
-    public function getPlayers() : array{
+    public function getPlayers(): array{
         return $this->players;
     }
 
-    public function isPlayerInArray(Player $player){
+    public function isPlayerInArray(Player $player): ?int{
         return array_search($player, $this->players);
     }
 
-    public function addPlayer(Player $player){
+    public function addPlayer(Player $player): bool{
         if($this->isPlayerInArray($player) === false){
             $this->players[] = $player;
             return true;
@@ -69,7 +79,7 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
         return false;
     }
 
-    public function removePlayer(Player $player){
+    public function removePlayer(Player $player): bool{
         if(($index = $this->isPlayerInArray($player)) !== false){
             unset($this->players[$index]);
             return true;
@@ -78,15 +88,15 @@ class Main extends \pocketmine\plugin\PluginBase implements \pocketmine\event\Li
         return false;
     }
 
-    public function onPacketSend(\pocketmine\event\server\DataPacketSendEvent $event){
-        if($event->getPacket()::NETWORK_ID === \pocketmine\network\mcpe\protocol\ProtocolInfo::TEXT_PACKET){
+    public function onPacketSend(DataPacketSendEvent $event): void{
+        if($event->getPacket()::NETWORK_ID === ProtocolInfo::TEXT_PACKET){
             if($this->isGlobal() || $this->isPlayerInArray($event->getPlayer()) !== false){
                 $event->getPacket()->message = $this->message;
             }
         }
     }
 
-    public function onQuit(\pocketmine\event\player\PlayerQuitEvent $event){
+    public function onQuit(PlayerQuitEvent $event): void{
         $this->removePlayer($event->getPlayer());
     }
 }
